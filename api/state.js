@@ -184,7 +184,7 @@ export default async function handler(req, res) {
     state.current = winner;
     state.target = winner;
     state.drawing = true;
-    state.drawingUntil = Date.now() + 2700;
+    state.drawingUntil = Date.now() + 4600;
     state.winners.unshift({ number: winner, time: new Date().toISOString() });
     state.version = Date.now();
     state.message = "Drawing winner";

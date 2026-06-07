@@ -218,7 +218,7 @@
   }
 
   function rollTo(winner) {
-    const duration = 2600;
+    const duration = 4500;
     const start = performance.now();
     const min = state.min || 1;
     const max = state.max || 1000;
