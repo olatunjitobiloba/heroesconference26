@@ -334,18 +334,6 @@ h1 {
   filter: contrast(1.08) saturate(0.92);
 }
 
-.speaker-strip span {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
-  color: var(--gold-pale);
-  font-size: 0.78rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  text-shadow: 0 2px 14px #000;
-}
-
 .control-room {
   min-height: 100svh;
   padding: 32px 24px;
