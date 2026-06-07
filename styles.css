@@ -1,5 +1,6 @@
 :root {
   color-scheme: dark;
+  --display-font: "Gotham Night", "Gotham Knights", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   --black: #050505;
   --coal: #0b0a07;
   --stone: #16120a;
@@ -12,6 +13,14 @@
   --red: #e23b2e;
   --line: rgba(244, 208, 111, 0.2);
   --shadow: rgba(0, 0, 0, 0.48);
+}
+
+@font-face {
+  font-family: "Gotham Night";
+  src: url("./assets/fonts/gotham-night.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
 }
 
 * {
@@ -127,7 +136,7 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--display-font);
   font-size: clamp(4.8rem, 13vw, 13rem);
   line-height: 0.78;
   letter-spacing: 0;
@@ -157,7 +166,7 @@ h1 {
 
 .event-meta strong {
   color: var(--red);
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--display-font);
   font-size: clamp(2rem, 4vw, 4.5rem);
   letter-spacing: 0;
 }
@@ -209,7 +218,7 @@ h1 {
 
 .draw-number {
   margin: 8px 0 4px;
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--display-font);
   font-size: clamp(7rem, 22vw, 21rem);
   line-height: 0.82;
   letter-spacing: 0;
@@ -375,7 +384,7 @@ h1 {
   max-width: 260px;
   margin-bottom: 24px;
   color: var(--gold-pale);
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--display-font);
   font-size: 2.8rem;
   line-height: 0.95;
   letter-spacing: 0;
@@ -510,7 +519,7 @@ input[type="number"] {
 
 .meter span:first-child {
   color: var(--gold-pale);
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--display-font);
   font-size: 3rem;
   line-height: 1;
 }
