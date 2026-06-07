@@ -317,12 +317,12 @@ h1 {
   background: rgba(5, 5, 5, 0.42);
 }
 
-.speaker-strip video {
+.speaker-strip img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.62;
-  filter: grayscale(0.5) sepia(0.18) contrast(1.1);
+  opacity: 0.82;
+  filter: contrast(1.08) saturate(0.92);
 }
 
 .speaker-strip span {
@@ -582,11 +582,80 @@ body.audience-mode .app-shell {
 }
 
 body.audience-mode .stage {
-  padding: 48px clamp(32px, 6vw, 88px);
+  padding: 28px clamp(32px, 6vw, 88px) 34px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 body.audience-mode .primary-actions {
   display: none;
+}
+
+body.audience-mode .event-header {
+  align-items: center;
+  opacity: 0.58;
+}
+
+body.audience-mode h1 {
+  font-size: clamp(2.4rem, 5.2vw, 5.8rem);
+  text-shadow: 0 5px 0 rgba(119, 111, 93, 0.36), 0 20px 44px var(--shadow);
+}
+
+body.audience-mode .theme {
+  margin-top: 8px;
+  font-size: clamp(0.72rem, 1vw, 1rem);
+  letter-spacing: 0.24em;
+}
+
+body.audience-mode .event-meta strong {
+  font-size: clamp(2rem, 3.8vw, 4rem);
+}
+
+body.audience-mode .draw-wrap {
+  align-self: center;
+  justify-self: center;
+  width: min(1180px, 100%);
+  padding-top: 0;
+  text-align: center;
+}
+
+body.audience-mode .draw-status {
+  margin-bottom: 12px;
+  justify-content: center;
+  color: var(--gold-pale);
+}
+
+body.audience-mode .number-frame {
+  padding: clamp(18px, 3vw, 34px) 0 clamp(22px, 3.2vw, 42px);
+  border-color: rgba(244, 208, 111, 0.48);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(244, 208, 111, 0.16), transparent 58%),
+    linear-gradient(90deg, transparent, rgba(244, 208, 111, 0.12), transparent);
+}
+
+body.audience-mode .number-kicker,
+body.audience-mode .draw-mark {
+  color: var(--gold-pale);
+}
+
+body.audience-mode .draw-number {
+  font-size: clamp(11rem, 28vw, 30rem);
+  text-shadow:
+    0 8px 0 rgba(119, 111, 93, 0.56),
+    0 0 48px rgba(244, 208, 111, 0.58),
+    0 54px 90px rgba(0, 0, 0, 0.78);
+}
+
+body.audience-mode .audience-note {
+  margin-top: 18px;
+  color: rgba(191, 184, 162, 0.82);
+}
+
+body.audience-mode .speaker-strip {
+  opacity: 0.74;
+}
+
+body.audience-mode .speaker-strip article {
+  height: clamp(72px, 9vw, 118px);
 }
 
 @keyframes riseIn {

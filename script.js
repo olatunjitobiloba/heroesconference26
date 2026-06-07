@@ -108,14 +108,18 @@
   async function syncNow() {
     try {
       const remote = await api(`/api/state?room=${encodeURIComponent(room)}`, { auth: false });
+      const previousCurrent = state.current;
       const next = { ...defaultState(), ...remote };
-      const shouldAnimate = next.drawing && next.version > lastVersion;
-      const shouldBurst = next.current !== null && next.version > lastVersion && !next.drawing;
+      const versionAdvanced = next.version > lastVersion;
+      const currentChanged = next.current !== null && next.current !== previousCurrent;
+      const shouldAnimate = versionAdvanced && (next.drawing || (mode === "audience" && currentChanged));
+      const shouldBurst = next.current !== null && versionAdvanced && !next.drawing && !shouldAnimate;
       state = next;
       lastVersion = Math.max(lastVersion, state.version || 0);
 
       if (shouldAnimate) {
-        await animateRemoteDraw(state.target);
+        await animateRemoteDraw(state.target || state.current);
+        render();
       } else {
         render();
         if (shouldBurst) burst();
