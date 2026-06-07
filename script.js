@@ -3,7 +3,8 @@
   const params = new URLSearchParams(location.search);
   const room = params.get("room") || "adullam-main";
   const tokenKey = `heroes-raffle-token:${room}`;
-  const storageKey = `heroes-raffle:v3:${room}`;
+  const settingsKey = `heroes-raffle-settings:v1:${room}`;
+  const versionKey = `heroes-raffle-version:v1:${room}`;
 
   const els = {
     body: document.body,
@@ -35,7 +36,7 @@
   const ctx = els.canvas.getContext("2d");
   const particles = [];
   let rolling = false;
-  let lastVersion = 0;
+  let lastVersion = readStoredVersion();
   let pollTimer = null;
   let state = defaultState();
 
@@ -59,6 +60,25 @@
 
   function token() {
     return localStorage.getItem(tokenKey) || "";
+  }
+
+  function readStoredVersion() {
+    return Number(localStorage.getItem(versionKey)) || 0;
+  }
+
+  function writeStoredVersion(value) {
+    const nextVersion = Number(value) || 0;
+    if (nextVersion > readStoredVersion()) {
+      localStorage.setItem(versionKey, String(nextVersion));
+    }
+  }
+
+  function readStoredSettings() {
+    try {
+      return JSON.parse(localStorage.getItem(settingsKey)) || {};
+    } catch {
+      return {};
+    }
   }
 
   async function api(path, options = {}) {
@@ -110,12 +130,22 @@
       const remote = await api(`/api/state?room=${encodeURIComponent(room)}`, { auth: false });
       const previousCurrent = state.current;
       const next = { ...defaultState(), ...remote };
+      const storedVersion = readStoredVersion();
+      const currentVersion = Math.max(lastVersion, storedVersion);
+
+      if (next.version && next.version < currentVersion) {
+        render();
+        setSync("Live channel: online");
+        return;
+      }
+
       const versionAdvanced = next.version > lastVersion;
       const currentChanged = next.current !== null && next.current !== previousCurrent;
       const shouldAnimate = versionAdvanced && (next.drawing || (mode === "audience" && currentChanged));
       const shouldBurst = next.current !== null && versionAdvanced && !next.drawing && !shouldAnimate;
       state = next;
       lastVersion = Math.max(lastVersion, state.version || 0);
+      writeStoredVersion(lastVersion);
 
       if (shouldAnimate) {
         await animateRemoteDraw(state.target || state.current);
@@ -138,7 +168,7 @@
 
   function loadLocalFallback() {
     try {
-      state = { ...defaultState(), ...JSON.parse(localStorage.getItem(storageKey)) };
+      state = { ...defaultState(), ...readStoredSettings(), version: readStoredVersion() };
       render();
     } catch {
       render();
@@ -146,7 +176,16 @@
   }
 
   function saveLocalFallback() {
-    localStorage.setItem(storageKey, JSON.stringify(state));
+    localStorage.setItem(
+      settingsKey,
+      JSON.stringify({
+        min: state.min,
+        max: state.max,
+        drawCount: state.drawCount,
+        unique: state.unique
+      })
+    );
+    writeStoredVersion(state.version);
   }
 
   function clampSettings() {
@@ -187,6 +226,7 @@
       });
       state = { ...defaultState(), ...remote };
       lastVersion = state.version || lastVersion;
+      writeStoredVersion(lastVersion);
       await animateRemoteDraw(state.target);
       await syncNow();
     } catch (error) {
@@ -303,6 +343,7 @@
         body: JSON.stringify({ room, min: state.min, max: state.max })
       });
       lastVersion = state.version || lastVersion;
+      writeStoredVersion(lastVersion);
       render();
     } catch (error) {
       if (els.liveStatus) els.liveStatus.textContent = error.message;
@@ -438,7 +479,7 @@
   syncNow();
   pollTimer = setInterval(() => {
     if (!rolling) syncNow();
-  }, mode === "audience" ? 900 : 1600);
+  }, mode === "audience" ? 2500 : 4000);
 
   window.addEventListener("beforeunload", () => clearInterval(pollTimer));
   window.addEventListener("resize", resizeCanvas);
