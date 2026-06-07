@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Heroes Conference Raffle Admin</title>
+    <meta name="description" content="Admin control for Heroes Conference raffle draw." />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <canvas class="burst-canvas" id="burstCanvas" aria-hidden="true"></canvas>
+
+    <main class="app-shell" id="appShell">
+      <section class="stage" aria-label="Raffle draw stage">
+        <video class="stage-video" src="./assets/adullam-main.mp4" autoplay muted loop playsinline></video>
+        <div class="grain" aria-hidden="true"></div>
+        <div class="stage-shade" aria-hidden="true"></div>
+
+        <header class="event-header">
+          <div>
+            <p class="eyebrow">Heroes Conference '26</p>
+            <h1>Adullam</h1>
+            <p class="theme">The Birthplace of Kings</p>
+          </div>
+          <div class="event-meta" aria-label="Event details">
+            <span>CU Chapel</span>
+            <strong>June 7</strong>
+            <span>3 PM Prompt</span>
+          </div>
+        </header>
+
+        <div class="draw-wrap">
+          <div class="draw-status">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span id="liveStatus">Admin login required</span>
+          </div>
+
+          <div class="number-frame" aria-live="polite" aria-atomic="true">
+            <span class="number-kicker">Winning Number</span>
+            <div class="draw-number" id="drawNumber">---</div>
+            <div class="draw-mark" id="drawMark">From 1 to 1000</div>
+          </div>
+
+          <div class="primary-actions">
+            <button class="draw-button" id="drawButton" type="button" disabled>
+              <span>Draw Winner</span>
+            </button>
+            <button class="icon-button" id="fullscreenButton" type="button" aria-label="Toggle fullscreen" title="Toggle fullscreen">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <aside class="speaker-strip" aria-label="Conference ministers">
+          <article>
+            <video src="./assets/dr-olumide-emmanuel.mp4" autoplay muted loop playsinline></video>
+            <span>Dr. Olumide Emmanuel</span>
+          </article>
+          <article>
+            <video src="./assets/steve-hills.mp4" autoplay muted loop playsinline></video>
+            <span>Steve Hills</span>
+          </article>
+          <article>
+            <video src="./assets/george-omoraro.mp4" autoplay muted loop playsinline></video>
+            <span>George Omoraro</span>
+          </article>
+          <article>
+            <video src="./assets/pastor-bisi-adewale.mp4" autoplay muted loop playsinline></video>
+            <span>Pst. Bisi Adewale</span>
+          </article>
+        </aside>
+      </section>
+
+      <section class="control-room" id="controlRoom" aria-label="Raffle controls">
+        <div class="login-panel" id="loginPanel">
+          <p class="eyebrow">Private Admin</p>
+          <h2>Sign in to control the draw</h2>
+          <form id="loginForm">
+            <label>
+              <span>Admin PIN</span>
+              <input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Enter PIN" />
+            </label>
+            <button class="draw-button small" type="submit">Login</button>
+          </form>
+          <p class="login-error" id="loginError" role="alert"></p>
+        </div>
+
+        <div class="admin-panel is-locked" id="adminPanel">
+          <div class="control-head">
+            <div>
+              <p class="eyebrow">Operator Desk</p>
+              <h2>Raffle Range</h2>
+            </div>
+            <button class="quiet-button" id="resetButton" type="button">Reset</button>
+          </div>
+
+          <form class="settings" id="settingsForm">
+            <label>
+              <span>Start</span>
+              <input id="minInput" type="number" min="1" max="1000" value="1" />
+            </label>
+            <label>
+              <span>End</span>
+              <input id="maxInput" type="number" min="1" max="1000" value="1000" />
+            </label>
+            <label>
+              <span>Draws</span>
+              <input id="drawCountInput" type="number" min="1" max="50" value="1" />
+            </label>
+            <label class="toggle-row">
+              <input id="uniqueToggle" type="checkbox" checked />
+              <span>No repeat winners</span>
+            </label>
+          </form>
+
+          <div class="mode-row" role="group" aria-label="Display mode">
+            <a class="mode-button link-mode is-active" href="/" target="_blank" rel="noreferrer">Audience</a>
+            <button class="mode-button" data-mode="operator" type="button">Operator</button>
+          </div>
+
+          <div class="meter" aria-label="Remaining numbers">
+            <div>
+              <span id="remainingCount">1000</span>
+              <small>remaining</small>
+            </div>
+            <div class="meter-track"><span id="meterFill"></span></div>
+          </div>
+
+          <div class="history-head">
+            <h2>Winners</h2>
+            <button class="quiet-button" id="copyButton" type="button">Copy List</button>
+          </div>
+          <ol class="winner-list" id="winnerList" aria-label="Drawn winners"></ol>
+
+          <footer class="control-foot">
+            <span id="syncStatus">Live channel: connecting</span>
+            <span>Room: <strong id="roomName">adullam-main</strong></span>
+          </footer>
+        </div>
+      </section>
+    </main>
+
+    <script src="./script.js" data-mode="admin"></script>
+  </body>
+</html>

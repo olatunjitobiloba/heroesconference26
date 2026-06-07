@@ -1,0 +1,10 @@
+{
+  "name": "heroesconference26",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "vercel dev",
+    "check": "node --check api/state.js && node --check script.js"
+  }
+}
