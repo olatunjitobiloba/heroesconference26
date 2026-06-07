@@ -128,6 +128,32 @@ button {
   text-transform: uppercase;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.event-brand {
+  display: grid;
+  gap: 12px;
+  align-items: start;
+  max-width: min(620px, 100%);
+}
+
+.event-logo {
+  display: block;
+  width: min(560px, 100%);
+  height: auto;
+  filter: drop-shadow(0 16px 34px rgba(0, 0, 0, 0.44));
+}
+
 h1,
 h2,
 p {
@@ -136,13 +162,6 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-family: var(--display-font);
-  font-size: clamp(4.8rem, 13vw, 13rem);
-  line-height: 0.78;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  color: var(--gold-pale);
-  text-shadow: 0 8px 0 rgba(119, 111, 93, 0.42), 0 28px 56px var(--shadow);
 }
 
 .theme {
@@ -592,15 +611,13 @@ body.audience-mode .event-header {
   opacity: 0.58;
 }
 
-body.audience-mode h1 {
-  font-size: clamp(2.4rem, 5.2vw, 5.8rem);
-  text-shadow: 0 5px 0 rgba(119, 111, 93, 0.36), 0 20px 44px var(--shadow);
+body.audience-mode .event-brand {
+  gap: 8px;
+  max-width: min(470px, 100%);
 }
 
-body.audience-mode .theme {
-  margin-top: 8px;
-  font-size: clamp(0.72rem, 1vw, 1rem);
-  letter-spacing: 0.24em;
+body.audience-mode .event-logo {
+  width: min(420px, 100%);
 }
 
 body.audience-mode .event-meta strong {
@@ -790,6 +807,14 @@ body.audience-mode .speaker-strip article {
     display: block;
   }
 
+  .event-brand {
+    max-width: 100%;
+  }
+
+  .event-logo {
+    width: min(420px, 100%);
+  }
+
   .event-meta {
     margin-top: 18px;
     white-space: normal;
@@ -798,10 +823,6 @@ body.audience-mode .speaker-strip article {
   .event-meta strong {
     display: block;
     margin: 6px 0;
-  }
-
-  .theme {
-    letter-spacing: 0.16em;
   }
 
   .draw-number {
