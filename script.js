@@ -58,6 +58,19 @@
     };
   }
 
+  function hydrateBackgroundVideo() {
+    document.querySelectorAll(".stage-video[data-src]").forEach((video) => {
+      if (video.src) return;
+      const source = video.dataset.src;
+      if (!source) return;
+      video.src = source;
+      video.load();
+      video.play().catch(() => {
+        // Background video is decorative; ignore autoplay failures.
+      });
+    });
+  }
+
   function token() {
     return localStorage.getItem(tokenKey) || "";
   }
@@ -468,6 +481,9 @@
 
   resizeCanvas();
   animateParticles();
+  window.requestAnimationFrame(() => {
+    hydrateBackgroundVideo();
+  });
 
   if (mode === "admin" && token()) {
     unlockAdmin();

@@ -27,6 +27,10 @@ function getRoom(name) {
   return rooms.get(key);
 }
 
+function nextVersion(state) {
+  return Math.max(Date.now(), Number(state.version) || 0, Number(state.drawingUntil) || 0) + 1;
+}
+
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -152,15 +156,17 @@ export default async function handler(req, res) {
     if (state.min > state.max) [state.min, state.max] = [state.max, state.min];
     state.drawCount = clamp(body.drawCount, 1, 50);
     state.unique = Boolean(body.unique);
-    state.version = Date.now();
+    state.version = nextVersion(state);
     state.message = "Settings updated";
     return json(res, 200, publicState(state));
   }
 
   if (action === "reset") {
+    const version = nextVersion(state);
     const next = defaultState();
     next.min = clamp(body.min, 1, 1000);
     next.max = clamp(body.max, 1, 1000);
+    next.version = version;
     rooms.set(roomKey(body.room), next);
     next.message = "Live draw reset";
     return json(res, 200, publicState(next));
@@ -176,17 +182,18 @@ export default async function handler(req, res) {
     const pool = availableNumbers(state);
     if (!pool.length) {
       state.message = "All numbers have been drawn";
-      state.version = Date.now();
+      state.version = nextVersion(state);
       return json(res, 409, { error: state.message, ...publicState(state) });
     }
 
+    const version = nextVersion(state);
     const winner = pickWinner(pool);
     state.current = winner;
     state.target = winner;
     state.drawing = true;
-    state.drawingUntil = Date.now() + 4600;
+    state.drawingUntil = version + 4600;
     state.winners.unshift({ number: winner, time: new Date().toISOString() });
-    state.version = Date.now();
+    state.version = version;
     state.message = "Drawing winner";
 
     return json(res, 200, publicState(state));

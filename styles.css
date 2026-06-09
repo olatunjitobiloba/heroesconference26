@@ -345,7 +345,8 @@ h1 {
   background: rgba(5, 5, 5, 0.42);
 }
 
-.speaker-strip img {
+.speaker-strip img,
+.speaker-strip video {
   width: 100%;
   height: 100%;
   object-fit: cover;
