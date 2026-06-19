@@ -511,9 +511,9 @@
   resizeCanvas();
   animateParticles();
   window.requestAnimationFrame(() => {
-    hydrateBackgroundVideo();
     hydrateSpeakerVideos();
   });
+  window.setTimeout(hydrateBackgroundVideo, 2200);
 
   if (mode === "admin" && token()) {
     unlockAdmin();
