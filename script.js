@@ -71,6 +71,35 @@
     });
   }
 
+  function hydrateSpeakerVideos() {
+    const videos = [...document.querySelectorAll(".speaker-strip video")];
+
+    const playAll = () => {
+      videos.forEach((video) => {
+        video.muted = true;
+        video.defaultMuted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.play().catch(() => {
+          // Retry below when media is ready or the user first interacts.
+        });
+      });
+    };
+
+    videos.forEach((video) => {
+      video.addEventListener("canplay", playAll, { once: true });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) playAll();
+    });
+    window.addEventListener("pageshow", playAll);
+    document.addEventListener("pointerdown", playAll, { once: true });
+    document.addEventListener("keydown", playAll, { once: true });
+
+    playAll();
+  }
+
   function token() {
     return localStorage.getItem(tokenKey) || "";
   }
@@ -483,6 +512,7 @@
   animateParticles();
   window.requestAnimationFrame(() => {
     hydrateBackgroundVideo();
+    hydrateSpeakerVideos();
   });
 
   if (mode === "admin" && token()) {
