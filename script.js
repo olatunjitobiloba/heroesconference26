@@ -36,6 +36,7 @@
   const ctx = els.canvas.getContext("2d");
   const particles = [];
   let rolling = false;
+  let syncing = false;
   let lastVersion = readStoredVersion();
   let pollTimer = null;
   let state = defaultState();
@@ -132,19 +133,30 @@
   }
 
   async function api(path, options = {}) {
-    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
-    if (options.auth !== false && token()) headers.Authorization = `Bearer ${token()}`;
+    const { auth = true, timeoutMs = 10000, headers: optionHeaders = {}, ...fetchOptions } = options;
+    const headers = { "Content-Type": "application/json", ...optionHeaders };
+    if (auth && token()) headers.Authorization = `Bearer ${token()}`;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
 
-    const response = await fetch(path, {
-      ...options,
-      headers,
-      cache: "no-store"
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(data.error || `Request failed with ${response.status}`);
+    try {
+      const response = await fetch(path, {
+        ...fetchOptions,
+        headers,
+        cache: "no-store",
+        signal: controller.signal
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed with ${response.status}`);
+      }
+      return data;
+    } catch (error) {
+      if (error.name === "AbortError") throw new Error("Connection timed out");
+      throw error;
+    } finally {
+      window.clearTimeout(timeout);
     }
-    return data;
   }
 
   async function login(event) {
@@ -176,6 +188,8 @@
   }
 
   async function syncNow() {
+    if (syncing) return;
+    syncing = true;
     try {
       const remote = await api(`/api/state?room=${encodeURIComponent(room)}`, { auth: false });
       const previousCurrent = state.current;
@@ -208,6 +222,8 @@
     } catch {
       loadLocalFallback();
       setSync("Live channel: retrying");
+    } finally {
+      syncing = false;
     }
   }
 
