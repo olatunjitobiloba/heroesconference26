@@ -74,20 +74,26 @@
   function hydrateSpeakerVideos() {
     const videos = [...document.querySelectorAll(".speaker-strip video")];
 
-    const playAll = () => {
-      videos.forEach((video) => {
-        video.muted = true;
-        video.defaultMuted = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.play().catch(() => {
-          // Retry below when media is ready or the user first interacts.
-        });
+    const startVideo = (video) => {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.loop = true;
+      video.playsInline = true;
+      if (!video.src && video.dataset.src) {
+        video.src = video.dataset.src;
+        video.load();
+      }
+      video.play().catch(() => {
+        // Retry below when media is ready or the user first interacts.
       });
     };
 
+    const playAll = () => {
+      videos.forEach(startVideo);
+    };
+
     videos.forEach((video) => {
-      video.addEventListener("canplay", playAll, { once: true });
+      video.addEventListener("canplay", () => startVideo(video), { once: true });
     });
 
     document.addEventListener("visibilitychange", () => {
@@ -97,7 +103,9 @@
     document.addEventListener("pointerdown", playAll, { once: true });
     document.addEventListener("keydown", playAll, { once: true });
 
-    playAll();
+    videos.forEach((video, index) => {
+      window.setTimeout(() => startVideo(video), 250 + index * 250);
+    });
   }
 
   function token() {
@@ -510,10 +518,15 @@
 
   resizeCanvas();
   animateParticles();
-  window.requestAnimationFrame(() => {
+  const startMedia = () => {
     hydrateSpeakerVideos();
-  });
-  window.setTimeout(hydrateBackgroundVideo, 2200);
+    window.setTimeout(hydrateBackgroundVideo, 3200);
+  };
+  if (document.readyState === "complete") {
+    startMedia();
+  } else {
+    window.addEventListener("load", startMedia, { once: true });
+  }
 
   if (mode === "admin" && token()) {
     unlockAdmin();
