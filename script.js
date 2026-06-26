@@ -24,6 +24,7 @@
     winnerList: document.getElementById("winnerList"),
     remainingCount: document.getElementById("remainingCount"),
     audienceVisitCount: document.getElementById("audienceVisitCount"),
+    audienceVisitOffsetInput: document.getElementById("audienceVisitOffsetInput"),
     meterFill: document.getElementById("meterFill"),
     liveStatus: document.getElementById("liveStatus"),
     syncStatus: document.getElementById("syncStatus"),
@@ -56,6 +57,7 @@
       drawCount: 1,
       unique: true,
       customNumbers: [],
+      audienceVisitOffset: 0,
       audienceVisits: 0,
       winners: [],
       current: null,
@@ -317,7 +319,8 @@
         max: state.max,
         drawCount: state.drawCount,
         unique: state.unique,
-        customNumbers: state.customNumbers
+        customNumbers: state.customNumbers,
+        audienceVisitOffset: state.audienceVisitOffset
       })
     );
     writeStoredVersion(state.version);
@@ -334,10 +337,12 @@
     state.drawCount = clamp(Number(els.drawCountInput.value) || 1, 1, 50);
     state.unique = els.uniqueToggle.checked;
     state.customNumbers = parseCustomNumbers(els.customNumbersInput?.value || "");
+    state.audienceVisitOffset = clamp(Number(els.audienceVisitOffsetInput?.value) || 0, 0, 100000);
 
     els.minInput.value = state.min;
     els.maxInput.value = state.max;
     els.drawCountInput.value = state.drawCount;
+    if (els.audienceVisitOffsetInput) els.audienceVisitOffsetInput.value = state.audienceVisitOffset;
     renderCustomPoolCount();
   }
 
@@ -473,6 +478,7 @@
       if (els.customNumbersInput && state.customNumbers?.length) {
         els.customNumbersInput.value = state.customNumbers.map((number) => String(number).padStart(3, "0")).join(", ");
       }
+      if (els.audienceVisitOffsetInput) els.audienceVisitOffsetInput.value = state.audienceVisitOffset || 0;
       renderCustomPoolCount();
     }
 
@@ -486,7 +492,10 @@
     const total = customPool().length || (state.max - state.min + 1);
     const remaining = availableNumbers().length;
     if (els.remainingCount) els.remainingCount.textContent = remaining;
-    if (els.audienceVisitCount) els.audienceVisitCount.textContent = state.audienceVisits || 0;
+    if (els.audienceVisitCount) {
+      const liveVisits = state.liveAudienceVisits ?? 0;
+      els.audienceVisitCount.textContent = (state.audienceVisitOffset || 0) + liveVisits;
+    }
     if (els.meterFill) els.meterFill.style.width = `${total ? (remaining / total) * 100 : 0}%`;
 
     if (els.winnerList) {
@@ -510,7 +519,13 @@
     try {
       state = await api("/api/state?action=reset", {
         method: "POST",
-        body: JSON.stringify({ room, min: state.min, max: state.max, customNumbers: state.customNumbers })
+        body: JSON.stringify({
+          room,
+          min: state.min,
+          max: state.max,
+          customNumbers: state.customNumbers,
+          audienceVisitOffset: state.audienceVisitOffset
+        })
       });
       lastVersion = state.version || lastVersion;
       writeStoredVersion(lastVersion);
@@ -616,7 +631,7 @@
     button.addEventListener("click", () => setMode(button.dataset.mode));
   });
 
-  [els.minInput, els.maxInput, els.drawCountInput, els.uniqueToggle, els.customNumbersInput].filter(Boolean).forEach((input) => {
+  [els.minInput, els.maxInput, els.drawCountInput, els.uniqueToggle, els.customNumbersInput, els.audienceVisitOffsetInput].filter(Boolean).forEach((input) => {
     input.addEventListener("change", async () => {
       clampSettings();
       render();
@@ -629,7 +644,8 @@
             max: state.max,
             drawCount: state.drawCount,
             unique: state.unique,
-            customNumbers: state.customNumbers
+            customNumbers: state.customNumbers,
+            audienceVisitOffset: state.audienceVisitOffset
           })
         });
       } catch (error) {

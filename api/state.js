@@ -8,7 +8,7 @@ function defaultState() {
     drawCount: 1,
     unique: true,
     customNumbers: [],
-    audienceVisits: 0,
+    audienceVisitOffset: 0,
     audienceVisitorIds: [],
     winners: [],
     current: null,
@@ -105,18 +105,16 @@ function sanitizeCustomNumbers(value) {
 }
 
 function recordAudienceVisit(state, visitorId) {
-  state.audienceVisits = Number(state.audienceVisits) || 0;
   state.audienceVisitorIds = Array.isArray(state.audienceVisitorIds) ? state.audienceVisitorIds : [];
   const id = String(visitorId || "").replace(/[^a-z0-9-]/gi, "").slice(0, 80);
 
   if (!id) {
-    state.audienceVisits += 1;
+    state.audienceVisitorIds.push(`anonymous-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     return;
   }
 
   if (!state.audienceVisitorIds.includes(id)) {
     state.audienceVisitorIds.push(id);
-    state.audienceVisits = state.audienceVisitorIds.length;
   }
 }
 
@@ -143,7 +141,9 @@ function publicState(state) {
     unique: state.unique,
     customNumbers: state.customNumbers || [],
     customCount: state.customNumbers?.length || 0,
-    audienceVisits: Number(state.audienceVisits) || 0,
+    audienceVisitOffset: Number(state.audienceVisitOffset) || 0,
+    audienceVisits: (Number(state.audienceVisitOffset) || 0) + (state.audienceVisitorIds?.length || 0),
+    liveAudienceVisits: state.audienceVisitorIds?.length || 0,
     winners: state.winners,
     current: state.current,
     drawing: state.drawing,
@@ -206,6 +206,7 @@ export default async function handler(req, res) {
     state.drawCount = clamp(body.drawCount, 1, 50);
     state.unique = Boolean(body.unique);
     state.customNumbers = sanitizeCustomNumbers(body.customNumbers);
+    state.audienceVisitOffset = clamp(body.audienceVisitOffset, 0, 100000);
     state.version = nextVersion(state);
     state.message = "Settings updated";
     return json(res, 200, publicState(state));
@@ -217,7 +218,7 @@ export default async function handler(req, res) {
     next.min = clamp(body.min, 1, 1000);
     next.max = clamp(body.max, 1, 1000);
     next.customNumbers = sanitizeCustomNumbers(body.customNumbers);
-    next.audienceVisits = Number(state.audienceVisits) || 0;
+    next.audienceVisitOffset = Number(state.audienceVisitOffset) || 0;
     next.audienceVisitorIds = Array.isArray(state.audienceVisitorIds) ? state.audienceVisitorIds : [];
     next.version = version;
     rooms.set(roomKey(body.room), next);

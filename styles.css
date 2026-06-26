@@ -595,6 +595,16 @@ input[type="number"] {
   border-bottom: 1px solid rgba(244, 208, 111, 0.14);
 }
 
+.visit-counter > div,
+.visit-counter label {
+  display: grid;
+  gap: 6px;
+}
+
+.visit-counter label {
+  width: min(140px, 42%);
+}
+
 .visit-counter span {
   color: var(--muted);
   font-size: 0.76rem;
@@ -608,6 +618,17 @@ input[type="number"] {
   font-family: var(--display-font);
   font-size: 2.25rem;
   line-height: 1;
+}
+
+.visit-counter input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  font-weight: 900;
 }
 
 .winner-list {
