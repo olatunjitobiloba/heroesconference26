@@ -41,6 +41,7 @@
   let syncing = false;
   let lastVersion = readStoredVersion();
   let pollTimer = null;
+  let pollDelay = mode === "audience" ? 6000 : 4000;
   let state = defaultState();
 
   if (els.roomName) els.roomName.textContent = room;
@@ -257,6 +258,14 @@
     } finally {
       syncing = false;
     }
+  }
+
+  function scheduleSync(delay = pollDelay) {
+    window.clearTimeout(pollTimer);
+    pollTimer = window.setTimeout(async () => {
+      if (!rolling) await syncNow();
+      scheduleSync();
+    }, delay);
   }
 
   function setSync(text) {
@@ -625,10 +634,8 @@
   }
 
   syncNow();
-  pollTimer = setInterval(() => {
-    if (!rolling) syncNow();
-  }, mode === "audience" ? 2500 : 4000);
+  scheduleSync(mode === "audience" ? 1200 : 2500);
 
-  window.addEventListener("beforeunload", () => clearInterval(pollTimer));
+  window.addEventListener("beforeunload", () => clearTimeout(pollTimer));
   window.addEventListener("resize", resizeCanvas);
 }());
