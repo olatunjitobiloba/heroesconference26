@@ -150,6 +150,10 @@ export default async function handler(req, res) {
 
   const state = getRoom(body.room);
 
+  if (action === "verify") {
+    return json(res, 200, publicState(state));
+  }
+
   if (action === "settings") {
     state.min = clamp(body.min, 1, 1000);
     state.max = clamp(body.max, 1, 1000);

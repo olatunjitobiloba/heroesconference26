@@ -148,7 +148,9 @@
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(data.error || `Request failed with ${response.status}`);
+        const error = new Error(data.error || `Request failed with ${response.status}`);
+        error.status = response.status;
+        throw error;
       }
       return data;
     } catch (error) {
@@ -181,6 +183,33 @@
     if (els.adminPanel) els.adminPanel.classList.remove("is-locked");
     if (els.drawButton) els.drawButton.disabled = false;
     if (els.liveStatus) els.liveStatus.textContent = "Admin connected";
+  }
+
+  function lockAdmin(message = "Admin login required") {
+    localStorage.removeItem(tokenKey);
+    if (els.loginPanel) els.loginPanel.classList.remove("is-hidden");
+    if (els.adminPanel) els.adminPanel.classList.add("is-locked");
+    if (els.drawButton) els.drawButton.disabled = true;
+    if (els.liveStatus) els.liveStatus.textContent = message;
+    setLoginError(message);
+  }
+
+  async function validateAdminSession() {
+    if (mode !== "admin" || !token()) return;
+    try {
+      state = await api("/api/state?action=verify", {
+        method: "POST",
+        body: JSON.stringify({ room })
+      });
+      unlockAdmin();
+      render();
+    } catch (error) {
+      if (error.status === 401) {
+        lockAdmin("Please log in again");
+      } else {
+        unlockAdmin();
+      }
+    }
   }
 
   function setLoginError(message) {
@@ -296,6 +325,7 @@
       await animateRemoteDraw(state.target);
       await syncNow();
     } catch (error) {
+      if (error.status === 401) lockAdmin("Please log in again");
       if (els.liveStatus) els.liveStatus.textContent = error.message;
     } finally {
       rolling = false;
@@ -412,6 +442,7 @@
       writeStoredVersion(lastVersion);
       render();
     } catch (error) {
+      if (error.status === 401) lockAdmin("Please log in again");
       if (els.liveStatus) els.liveStatus.textContent = error.message;
     }
   }
@@ -526,7 +557,8 @@
             unique: state.unique
           })
         });
-      } catch {
+      } catch (error) {
+        if (error.status === 401) lockAdmin("Please log in again");
         setSync("Live channel: local fallback");
       }
     });
@@ -544,9 +576,7 @@
     window.addEventListener("load", startMedia, { once: true });
   }
 
-  if (mode === "admin" && token()) {
-    unlockAdmin();
-  }
+  validateAdminSession();
   if (mode === "audience") {
     setSync("Live channel: connecting");
   }
