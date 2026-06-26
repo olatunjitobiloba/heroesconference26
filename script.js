@@ -18,6 +18,8 @@
     maxInput: document.getElementById("maxInput"),
     drawCountInput: document.getElementById("drawCountInput"),
     uniqueToggle: document.getElementById("uniqueToggle"),
+    customNumbersInput: document.getElementById("customNumbersInput"),
+    customPoolCount: document.getElementById("customPoolCount"),
     winnerList: document.getElementById("winnerList"),
     remainingCount: document.getElementById("remainingCount"),
     meterFill: document.getElementById("meterFill"),
@@ -50,6 +52,7 @@
       max: 1000,
       drawCount: 1,
       unique: true,
+      customNumbers: [],
       winners: [],
       current: null,
       drawing: false,
@@ -277,7 +280,8 @@
         min: state.min,
         max: state.max,
         drawCount: state.drawCount,
-        unique: state.unique
+        unique: state.unique,
+        customNumbers: state.customNumbers
       })
     );
     writeStoredVersion(state.version);
@@ -293,14 +297,39 @@
     state.max = max;
     state.drawCount = clamp(Number(els.drawCountInput.value) || 1, 1, 50);
     state.unique = els.uniqueToggle.checked;
+    state.customNumbers = parseCustomNumbers(els.customNumbersInput?.value || "");
 
     els.minInput.value = state.min;
     els.maxInput.value = state.max;
     els.drawCountInput.value = state.drawCount;
+    renderCustomPoolCount();
   }
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function parseCustomNumbers(text) {
+    const seen = new Set();
+    return String(text || "")
+      .match(/\d+/g)
+      ?.map((value) => Number(value))
+      .filter((number) => {
+        if (!Number.isInteger(number) || number < 1 || number > 1000 || seen.has(number)) return false;
+        seen.add(number);
+        return true;
+      })
+      .slice(0, 1000) || [];
+  }
+
+  function customPool() {
+    if (mode === "admin" && els.customNumbersInput) return parseCustomNumbers(els.customNumbersInput.value);
+    return state.customNumbers || [];
+  }
+
+  function renderCustomPoolCount() {
+    if (!els.customPoolCount) return;
+    els.customPoolCount.textContent = customPool().length;
   }
 
   async function draw() {
@@ -316,7 +345,8 @@
           min: state.min,
           max: state.max,
           drawCount: state.drawCount,
-          unique: state.unique
+          unique: state.unique,
+          customNumbers: state.customNumbers
         })
       });
       state = { ...defaultState(), ...remote };
@@ -358,11 +388,12 @@
     const start = performance.now();
     const min = state.min || 1;
     const max = state.max || 1000;
+    const pool = customPool();
 
     return new Promise((resolve) => {
       function frame(now) {
         const progress = Math.min(1, (now - start) / duration);
-        const flicker = progress < 0.9 ? randomInt(min, max) : winner;
+        const flicker = progress < 0.9 ? (pool.length ? pool[randomInt(0, pool.length - 1)] : randomInt(min, max)) : winner;
         els.drawNumber.textContent = String(flicker).padStart(3, "0");
         els.drawMark.textContent = progress < 0.9 ? "The cave is stirring" : "Birthplace of kings";
 
@@ -389,11 +420,12 @@
 
   function availableNumbers() {
     const used = new Set(state.winners.map((winner) => winner.number));
-    const numbers = [];
-    for (let n = state.min; n <= state.max; n += 1) {
-      if (!state.unique || !used.has(n)) numbers.push(n);
+    const source = customPool();
+    const numbers = source.length ? [...source] : [];
+    if (!numbers.length) {
+      for (let n = state.min; n <= state.max; n += 1) numbers.push(n);
     }
-    return numbers;
+    return numbers.filter((n) => !state.unique || !used.has(n));
   }
 
   function render() {
@@ -402,15 +434,20 @@
       els.maxInput.value = state.max;
       els.drawCountInput.value = state.drawCount;
       els.uniqueToggle.checked = state.unique;
+      if (els.customNumbersInput && state.customNumbers?.length) {
+        els.customNumbersInput.value = state.customNumbers.map((number) => String(number).padStart(3, "0")).join(", ");
+      }
+      renderCustomPoolCount();
     }
 
     if (!rolling) {
       els.drawNumber.textContent = state.current === null ? "---" : String(state.current).padStart(3, "0");
     }
-    els.drawMark.textContent = `From ${state.min} to ${state.max}`;
+    const poolCount = customPool().length;
+    els.drawMark.textContent = poolCount ? `From ${poolCount} live numbers` : `From ${state.min} to ${state.max}`;
     if (els.liveStatus) els.liveStatus.textContent = state.message || "Live draw ready";
 
-    const total = state.max - state.min + 1;
+    const total = customPool().length || (state.max - state.min + 1);
     const remaining = availableNumbers().length;
     if (els.remainingCount) els.remainingCount.textContent = remaining;
     if (els.meterFill) els.meterFill.style.width = `${total ? (remaining / total) * 100 : 0}%`;
@@ -436,7 +473,7 @@
     try {
       state = await api("/api/state?action=reset", {
         method: "POST",
-        body: JSON.stringify({ room, min: state.min, max: state.max })
+        body: JSON.stringify({ room, min: state.min, max: state.max, customNumbers: state.customNumbers })
       });
       lastVersion = state.version || lastVersion;
       writeStoredVersion(lastVersion);
@@ -542,7 +579,7 @@
     button.addEventListener("click", () => setMode(button.dataset.mode));
   });
 
-  [els.minInput, els.maxInput, els.drawCountInput, els.uniqueToggle].filter(Boolean).forEach((input) => {
+  [els.minInput, els.maxInput, els.drawCountInput, els.uniqueToggle, els.customNumbersInput].filter(Boolean).forEach((input) => {
     input.addEventListener("change", async () => {
       clampSettings();
       render();
@@ -554,7 +591,8 @@
             min: state.min,
             max: state.max,
             drawCount: state.drawCount,
-            unique: state.unique
+            unique: state.unique,
+            customNumbers: state.customNumbers
           })
         });
       } catch (error) {
@@ -562,6 +600,11 @@
         setSync("Live channel: local fallback");
       }
     });
+  });
+
+  els.customNumbersInput?.addEventListener("input", () => {
+    state.customNumbers = parseCustomNumbers(els.customNumbersInput.value);
+    renderCustomPoolCount();
   });
 
   resizeCanvas();

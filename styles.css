@@ -486,6 +486,43 @@ input[type="number"] {
   font-weight: 900;
 }
 
+.number-pool {
+  display: grid;
+  gap: 8px;
+}
+
+.number-pool span,
+.number-pool small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.number-pool textarea {
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.32);
+  color: var(--gold-pale);
+  font: 900 0.95rem/1.5 var(--body-font);
+  letter-spacing: 0.04em;
+}
+
+.number-pool textarea:focus {
+  outline: 2px solid rgba(244, 208, 111, 0.45);
+  outline-offset: 2px;
+}
+
+.number-pool strong {
+  color: var(--gold-pale);
+  font-size: 0.95rem;
+}
+
 .toggle-row {
   grid-column: 1 / -1;
   min-height: 48px;

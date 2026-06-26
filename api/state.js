@@ -7,6 +7,7 @@ function defaultState() {
     max: 1000,
     drawCount: 1,
     unique: true,
+    customNumbers: [],
     winners: [],
     current: null,
     drawing: false,
@@ -77,11 +78,28 @@ function clamp(value, min, max) {
 
 function availableNumbers(state) {
   const used = new Set(state.winners.map((winner) => winner.number));
+  const source = state.customNumbers?.length ? state.customNumbers : rangeNumbers(state.min, state.max);
+  return source.filter((number) => !state.unique || !used.has(number));
+}
+
+function rangeNumbers(min, max) {
   const numbers = [];
-  for (let number = state.min; number <= state.max; number += 1) {
-    if (!state.unique || !used.has(number)) numbers.push(number);
-  }
+  for (let number = min; number <= max; number += 1) numbers.push(number);
   return numbers;
+}
+
+function sanitizeCustomNumbers(value) {
+  const raw = Array.isArray(value) ? value : [];
+  const seen = new Set();
+  const numbers = [];
+  raw.forEach((entry) => {
+    const number = Math.trunc(Number(entry));
+    if (number >= 1 && number <= 1000 && !seen.has(number)) {
+      seen.add(number);
+      numbers.push(number);
+    }
+  });
+  return numbers.slice(0, 1000);
 }
 
 function randomInt(min, max) {
@@ -105,6 +123,8 @@ function publicState(state) {
     max: state.max,
     drawCount: state.drawCount,
     unique: state.unique,
+    customNumbers: state.customNumbers,
+    customCount: state.customNumbers.length,
     winners: state.winners,
     current: state.current,
     drawing: state.drawing,
@@ -160,6 +180,7 @@ export default async function handler(req, res) {
     if (state.min > state.max) [state.min, state.max] = [state.max, state.min];
     state.drawCount = clamp(body.drawCount, 1, 50);
     state.unique = Boolean(body.unique);
+    state.customNumbers = sanitizeCustomNumbers(body.customNumbers);
     state.version = nextVersion(state);
     state.message = "Settings updated";
     return json(res, 200, publicState(state));
@@ -170,6 +191,7 @@ export default async function handler(req, res) {
     const next = defaultState();
     next.min = clamp(body.min, 1, 1000);
     next.max = clamp(body.max, 1, 1000);
+    next.customNumbers = sanitizeCustomNumbers(body.customNumbers);
     next.version = version;
     rooms.set(roomKey(body.room), next);
     next.message = "Live draw reset";
@@ -182,6 +204,7 @@ export default async function handler(req, res) {
     if (state.min > state.max) [state.min, state.max] = [state.max, state.min];
     state.drawCount = clamp(body.drawCount, 1, 50);
     state.unique = Boolean(body.unique);
+    state.customNumbers = sanitizeCustomNumbers(body.customNumbers);
 
     const pool = availableNumbers(state);
     if (!pool.length) {
