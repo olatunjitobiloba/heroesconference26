@@ -3,6 +3,7 @@
   const params = new URLSearchParams(location.search);
   const room = params.get("room") || "adullam-main";
   const tokenKey = `heroes-raffle-token:${room}`;
+  const visitorKey = `heroes-raffle-visitor:${room}`;
   const settingsKey = `heroes-raffle-settings:v1:${room}`;
   const versionKey = `heroes-raffle-version:v1:${room}`;
 
@@ -22,6 +23,7 @@
     customPoolCount: document.getElementById("customPoolCount"),
     winnerList: document.getElementById("winnerList"),
     remainingCount: document.getElementById("remainingCount"),
+    audienceVisitCount: document.getElementById("audienceVisitCount"),
     meterFill: document.getElementById("meterFill"),
     liveStatus: document.getElementById("liveStatus"),
     syncStatus: document.getElementById("syncStatus"),
@@ -54,6 +56,7 @@
       drawCount: 1,
       unique: true,
       customNumbers: [],
+      audienceVisits: 0,
       winners: [],
       current: null,
       drawing: false,
@@ -115,6 +118,15 @@
 
   function token() {
     return localStorage.getItem(tokenKey) || "";
+  }
+
+  function visitorId() {
+    let id = localStorage.getItem(visitorKey);
+    if (!id) {
+      id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${randomInt(100000, 999999)}`;
+      localStorage.setItem(visitorKey, id);
+    }
+    return id;
   }
 
   function readStoredVersion() {
@@ -257,6 +269,21 @@
       setSync("Live channel: retrying");
     } finally {
       syncing = false;
+    }
+  }
+
+  async function registerAudienceVisit() {
+    if (mode !== "audience") return;
+    try {
+      const remote = await api("/api/state?action=visit", {
+        method: "POST",
+        auth: false,
+        body: JSON.stringify({ room, visitorId: visitorId() })
+      });
+      state = { ...defaultState(), ...remote };
+      render();
+    } catch {
+      // Visit counting is informational; do not block the raffle screen.
     }
   }
 
@@ -459,6 +486,7 @@
     const total = customPool().length || (state.max - state.min + 1);
     const remaining = availableNumbers().length;
     if (els.remainingCount) els.remainingCount.textContent = remaining;
+    if (els.audienceVisitCount) els.audienceVisitCount.textContent = state.audienceVisits || 0;
     if (els.meterFill) els.meterFill.style.width = `${total ? (remaining / total) * 100 : 0}%`;
 
     if (els.winnerList) {
@@ -633,6 +661,7 @@
     setSync("Live channel: connecting");
   }
 
+  registerAudienceVisit();
   syncNow();
   scheduleSync(mode === "audience" ? 1200 : 2500);
 

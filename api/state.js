@@ -8,6 +8,8 @@ function defaultState() {
     drawCount: 1,
     unique: true,
     customNumbers: [],
+    audienceVisits: 0,
+    audienceVisitorIds: [],
     winners: [],
     current: null,
     drawing: false,
@@ -102,6 +104,22 @@ function sanitizeCustomNumbers(value) {
   return numbers.slice(0, 1000);
 }
 
+function recordAudienceVisit(state, visitorId) {
+  state.audienceVisits = Number(state.audienceVisits) || 0;
+  state.audienceVisitorIds = Array.isArray(state.audienceVisitorIds) ? state.audienceVisitorIds : [];
+  const id = String(visitorId || "").replace(/[^a-z0-9-]/gi, "").slice(0, 80);
+
+  if (!id) {
+    state.audienceVisits += 1;
+    return;
+  }
+
+  if (!state.audienceVisitorIds.includes(id)) {
+    state.audienceVisitorIds.push(id);
+    state.audienceVisits = state.audienceVisitorIds.length;
+  }
+}
+
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -123,8 +141,9 @@ function publicState(state) {
     max: state.max,
     drawCount: state.drawCount,
     unique: state.unique,
-    customNumbers: state.customNumbers,
-    customCount: state.customNumbers.length,
+    customNumbers: state.customNumbers || [],
+    customCount: state.customNumbers?.length || 0,
+    audienceVisits: Number(state.audienceVisits) || 0,
     winners: state.winners,
     current: state.current,
     drawing: state.drawing,
@@ -164,6 +183,12 @@ export default async function handler(req, res) {
     return json(res, 200, { token: adminToken() });
   }
 
+  if (action === "visit") {
+    const state = getRoom(body.room);
+    recordAudienceVisit(state, body.visitorId);
+    return json(res, 200, publicState(state));
+  }
+
   if (!isAuthorized(req)) {
     return json(res, 401, { error: "Admin login required" });
   }
@@ -192,6 +217,8 @@ export default async function handler(req, res) {
     next.min = clamp(body.min, 1, 1000);
     next.max = clamp(body.max, 1, 1000);
     next.customNumbers = sanitizeCustomNumbers(body.customNumbers);
+    next.audienceVisits = Number(state.audienceVisits) || 0;
+    next.audienceVisitorIds = Array.isArray(state.audienceVisitorIds) ? state.audienceVisitorIds : [];
     next.version = version;
     rooms.set(roomKey(body.room), next);
     next.message = "Live draw reset";

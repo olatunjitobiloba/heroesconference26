@@ -584,6 +584,32 @@ input[type="number"] {
   transition: width 260ms ease;
 }
 
+.visit-counter {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(244, 208, 111, 0.14);
+  border-bottom: 1px solid rgba(244, 208, 111, 0.14);
+}
+
+.visit-counter span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.visit-counter strong {
+  color: var(--gold-pale);
+  font-family: var(--display-font);
+  font-size: 2.25rem;
+  line-height: 1;
+}
+
 .winner-list {
   min-height: 160px;
   max-height: 34svh;
